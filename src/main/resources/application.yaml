@@ -1,6 +1,7 @@
 spring:
   application:
     name: coachhub
+
   datasource:
     url: jdbc:postgresql://localhost:5432/coachhub
     username: coachhub
@@ -9,3 +10,15 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+
+    open-in-view: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+
+  endpoint:
+    health:
+      show-details: always
