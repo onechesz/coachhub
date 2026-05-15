@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: coachhub
+  datasource:
+    url: jdbc:postgresql://localhost:5432/coachhub
+    username: coachhub
+    password: coachhub
+
+  jpa:
+    hibernate:
+      ddl-auto: validate

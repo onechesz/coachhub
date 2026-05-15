@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - changeSet:
+      id: test
+      author: ivan minyaev
+      changes:
+        - sql:
+            sql: SELECT 1;
