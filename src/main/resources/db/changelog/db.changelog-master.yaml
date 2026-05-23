@@ -1,7 +1,4 @@
 databaseChangeLog:
-  - changeSet:
-      id: test
-      author: ivan minyaev
-      changes:
-        - sql:
-            sql: SELECT 1;
+  - include:
+      file: 001-init.yaml
+      relativeToChangelogFile: true

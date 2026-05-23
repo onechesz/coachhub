@@ -1,0 +1,1100 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-user
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - not:
+            - tableExists:
+                tableName: user
+
+      changes:
+        - createTable:
+            tableName: user
+
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  autoIncrement: true
+
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: name
+                  type: varchar(20)
+
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: pass
+                  type: varchar(255)
+
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: phone
+                  type: varchar(50)
+
+                  constraints:
+                    unique: true
+
+              - column:
+                  name: card_number
+                  type: varchar(4)
+
+              - column:
+                  name: email
+                  type: varchar(255)
+
+                  constraints:
+                    unique: true
+
+      rollback:
+        - dropTable:
+            tableName: user
+
+  - changeSet:
+      id: 002-create-student
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - not:
+            - tableExists:
+                tableName: student
+
+      changes:
+        - createTable:
+            tableName: student
+
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  autoIncrement: true
+
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: first_name
+                  type: varchar(255)
+
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: last_name
+                  type: varchar(255)
+
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: description
+                  type: text
+
+              - column:
+                  name: telegram
+                  type: varchar(32)
+
+              - column:
+                  name: whatsapp
+                  type: varchar(32)
+
+              - column:
+                  name: phone
+                  type: varchar(32)
+
+              - column:
+                  name: user_id
+                  type: bigint
+
+                  constraints:
+                    nullable: false
+
+      rollback:
+        - dropTable:
+            tableName: student
+
+  - changeSet:
+      id: 003-create-fk-student-user
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - and:
+            - tableExists:
+                tableName: student
+
+            - tableExists:
+                tableName: user
+
+            - not:
+                foreignKeyConstraintExists:
+                  foreignKeyName: student_user_fk
+
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: student
+            baseColumnNames: user_id
+            constraintName: student_user_fk
+            referencedTableName: user
+            referencedColumnNames: id
+
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: student
+            constraintName: student_user_fk
+
+  - changeSet:
+      id: 004-create-lesson
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - not:
+            - tableExists:
+                tableName: lesson
+
+      changes:
+        - createTable:
+            tableName: lesson
+
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  autoIncrement: true
+
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: description
+                  type: varchar(255)
+
+              - column:
+                  name: date_start
+                  type: timestamp
+
+              - column:
+                  name: date_end
+                  type: timestamp
+
+              - column:
+                  name: lesson_type
+                  type: varchar(50)
+
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: regular
+                  type: boolean
+
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: user_id
+                  type: bigint
+
+              - column:
+                  name: next_id
+                  type: bigint
+
+              - column:
+                  name: created_at
+                  type: timestamp
+
+                  constraints:
+                    nullable: false
+
+      rollback:
+        - dropTable:
+            tableName: lesson
+
+  - changeSet:
+      id: 005-create-lesson-type-check
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - tableExists:
+            tableName: lesson
+
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE lesson
+              ADD CONSTRAINT lesson_type_chk
+              CHECK (lesson_type IN ('INDIVIDUAL', 'GROUP', 'TRAINING', 'CONSULTATION'));
+
+      rollback:
+        - sql:
+            sql: |
+              ALTER TABLE lesson
+              DROP CONSTRAINT lesson_type_chk;
+
+  - changeSet:
+      id: 006-create-fk-lesson-user
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - and:
+            - tableExists:
+                tableName: lesson
+
+            - tableExists:
+                tableName: user
+
+            - not:
+                foreignKeyConstraintExists:
+                  foreignKeyName: lesson_user_fk
+
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: lesson
+            baseColumnNames: user_id
+            constraintName: lesson_user_fk
+            referencedTableName: user
+            referencedColumnNames: id
+
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: lesson
+            constraintName: lesson_user_fk
+
+  - changeSet:
+      id: 007-create-fk-lesson-lesson
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - and:
+            - tableExists:
+                tableName: lesson
+
+            - not:
+                foreignKeyConstraintExists:
+                  foreignKeyName: lesson_lesson_fk
+
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: lesson
+            baseColumnNames: next_id
+            constraintName: lesson_lesson_fk
+            referencedTableName: lesson
+            referencedColumnNames: id
+
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: lesson
+            constraintName: lesson_lesson_fk
+
+  - changeSet:
+      id: 008-create-student_lesson
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - not:
+            - tableExists:
+                tableName: student_lesson
+
+      changes:
+        - createTable:
+            tableName: student_lesson
+
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  autoIncrement: true
+
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: lesson_id
+                  type: bigint
+
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: student_id
+                  type: bigint
+
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: status
+                  type: varchar(50)
+
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: created_at
+                  type: timestamp
+
+                  constraints:
+                    nullable: false
+
+      rollback:
+        - dropTable:
+            tableName: student_lesson
+
+  - changeSet:
+      id: 009-create-unique-student_lesson-student-lesson
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - and:
+            - tableExists:
+                tableName: student_lesson
+
+            - not:
+                - uniqueConstraintExists:
+                    tableName: student_lesson
+                    constraintName: student_id_lesson_id_uq
+
+      changes:
+        - addUniqueConstraint:
+            tableName: student_lesson
+            columnNames: student_id, lesson_id
+            constraintName: student_id_lesson_id_uq
+
+      rollback:
+        - dropUniqueConstraint:
+            tableName: student_lesson
+            constraintName: student_id_lesson_id_uq
+
+  - changeSet:
+      id: 010-create-fk-student_lesson-lesson
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - and:
+            - tableExists:
+                tableName: student_lesson
+
+            - tableExists:
+                tableName: lesson
+
+            - not:
+                foreignKeyConstraintExists:
+                  foreignKeyName: student_lesson_lesson_fk
+
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: student_lesson
+            baseColumnNames: lesson_id
+            constraintName: student_lesson_lesson_fk
+            referencedTableName: lesson
+            referencedColumnNames: id
+
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: student_lesson
+            constraintName: student_lesson_lesson_fk
+
+  - changeSet:
+      id: 011-create-fk-student_lesson-student
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - and:
+            - tableExists:
+                tableName: student_lesson
+
+            - tableExists:
+                tableName: student
+
+            - not:
+                foreignKeyConstraintExists:
+                  foreignKeyName: student_lesson_student_fk
+
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: student_lesson
+            baseColumnNames: student_id
+            constraintName: student_lesson_student_fk
+            referencedTableName: student
+            referencedColumnNames: id
+
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: student_lesson
+            constraintName: student_lesson_student_fk
+
+  - changeSet:
+      id: 012-create-student_lesson-status-check
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - tableExists:
+            tableName: student_lesson
+
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE student_lesson
+              ADD CONSTRAINT student_lesson_status_chk
+              CHECK (status IN ('PLANNED', 'VISITED', 'CANCELLED', 'MISSED'));
+
+      rollback:
+        - sql:
+            sql: |
+              ALTER TABLE student_lesson
+              DROP CONSTRAINT student_lesson_status_chk;
+
+  - changeSet:
+      id: 013-create-group
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - not:
+            - tableExists:
+                tableName: group
+
+      changes:
+        - createTable:
+            tableName: group
+
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  autoIncrement: true
+
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: name
+                  type: varchar(255)
+
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: user_id
+                  type: bigint
+
+                  constraints:
+                    nullable: false
+
+      rollback:
+        - dropTable:
+            tableName: group
+
+  - changeSet:
+      id: 014-create-unique-group-user_id-name
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - and:
+            - tableExists:
+                tableName: group
+
+            - not:
+                - uniqueConstraintExists:
+                    tableName: group
+                    constraintName: user_id_name_uq
+
+      changes:
+        - addUniqueConstraint:
+            tableName: group
+            columnNames: user_id, name
+            constraintName: user_id_name_uq
+
+      rollback:
+        - dropUniqueConstraint:
+            tableName: group
+            constraintName: user_id_name_uq
+
+  - changeSet:
+      id: 015-create-fk-group-user
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - and:
+            - tableExists:
+                tableName: group
+
+            - tableExists:
+                tableName: user
+
+            - not:
+                - foreignKeyConstraintExists:
+                    foreignKeyName: group_user_fk
+
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: group
+            baseColumnNames: user_id
+            constraintName: group_user_fk
+            referencedTableName: user
+            referencedColumnNames: id
+
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: group
+            constraintName: group_user_fk
+
+  - changeSet:
+      id: 016-create-student_group
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - not:
+            - tableExists:
+                tableName: student_group
+
+      changes:
+        - createTable:
+            tableName: student_group
+
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  autoIncrement: true
+
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: student_id
+                  type: bigint
+
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: group_id
+                  type: bigint
+
+                  constraints:
+                    nullable: false
+
+      rollback:
+        - dropTable:
+            tableName: student_group
+
+  - changeSet:
+      id: 017-create-unique-student_group-student_id-group_id
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - and:
+            - tableExists:
+                tableName: student_group
+
+            - not:
+                - uniqueConstraintExists:
+                    tableName: student_group
+                    constraintName: student_id_group_id_uq
+
+      changes:
+        - addUniqueConstraint:
+            tableName: student_group
+            columnNames: student_id, group_id
+            constraintName: student_id_group_id_uq
+
+      rollback:
+        - dropUniqueConstraint:
+            tableName: student_group
+            constraintName: student_id_group_id_uq
+
+  - changeSet:
+      id: 018-create-fk-student_group-student
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - and:
+            - tableExists:
+                tableName: student_group
+
+            - tableExists:
+                tableName: student
+
+            - not:
+                foreignKeyConstraintExists:
+                  foreignKeyName: student_group_student_fk
+
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: student_group
+            baseColumnNames: student_id
+            constraintName: student_group_student_fk
+            referencedTableName: student
+            referencedColumnNames: id
+
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: student_group
+            constraintName: student_group_student_fk
+
+  - changeSet:
+      id: 019-create-fk-student_group-group
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - and:
+            - tableExists:
+                tableName: student_group
+
+            - tableExists:
+                tableName: group
+
+            - not:
+                foreignKeyConstraintExists:
+                  foreignKeyName: student_group_group_fk
+
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: student_group
+            baseColumnNames: group_id
+            constraintName: student_group_group_fk
+            referencedTableName: group
+            referencedColumnNames: id
+
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: student_group
+            constraintName: student_group_group_fk
+
+  - changeSet:
+      id: 020-create-balance
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - not:
+            - tableExists:
+                tableName: balance
+
+      changes:
+        - createTable:
+            tableName: balance
+
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  autoIncrement: true
+
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: student_id
+                  type: bigint
+
+                  constraints:
+                    nullable: false
+                    unique: true
+
+              - column:
+                  name: balance
+                  type: numeric(19, 2)
+
+                  constraints:
+                    nullable: false
+
+      rollback:
+        - dropTable:
+            tableName: balance
+
+  - changeSet:
+      id: 021-create-fk-balance-student
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - and:
+            - tableExists:
+                tableName: balance
+
+            - tableExists:
+                tableName: student
+
+            - not:
+                foreignKeyConstraintExists:
+                  foreignKeyName: balance_student_fk
+
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: balance
+            baseColumnNames: student_id
+            constraintName: balance_student_fk
+            referencedTableName: student
+            referencedColumnNames: id
+
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: balance
+            constraintName: balance_student_fk
+
+  - changeSet:
+      id: 022-create-transaction
+      author: ivan minyaev
+
+      preConditions:
+        - not:
+            - tableExists:
+                tableName: transaction
+
+      changes:
+        - createTable:
+            tableName: transaction
+
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  autoIncrement: true
+
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: balance_id
+                  type: bigint
+
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: type
+                  type: varchar(20)
+
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: direction
+                  type: varchar(20)
+
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: comment
+                  type: varchar(255)
+
+              - column:
+                  name: amount
+                  type: numeric(19, 2)
+
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: user_id
+                  type: bigint
+
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: created_at
+                  type: timestamp
+
+                  constraints:
+                    nullable: false
+
+      rollback:
+        - dropTable:
+            tableName: transaction
+
+  - changeSet:
+      id: 023-create-transaction-type-check
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - tableExists:
+            tableName: transaction
+
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE transaction
+              ADD CONSTRAINT transaction_type_chk
+              CHECK (type IN ('LESSON_PAYMENT', 'TOP_UP', 'REFUND', 'MANUAL_ADJUSTMENT'));
+
+      rollback:
+        - sql:
+            sql: |
+              ALTER TABLE transaction
+              DROP CONSTRAINT transaction_type_chk;
+
+  - changeSet:
+      id: 024-create-transaction-direction-check
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - tableExists:
+            tableName: transaction
+
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE transaction
+              ADD CONSTRAINT transaction_direction_chk
+              CHECK (direction IN ('IN', 'OUT'));
+
+      rollback:
+        - sql:
+            sql: |
+              ALTER TABLE transaction
+              DROP CONSTRAINT transaction_direction_chk;
+
+  - changeSet:
+      id: 025-create-fk-transaction-balance
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - and:
+            - tableExists:
+                tableName: transaction
+
+            - tableExists:
+                tableName: balance
+
+            - not:
+                foreignKeyConstraintExists:
+                  foreignKeyName: transaction_balance_fk
+
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: transaction
+            baseColumnNames: balance_id
+            constraintName: transaction_balance_fk
+            referencedTableName: balance
+            referencedColumnNames: id
+
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: transaction
+            constraintName: transaction_balance_fk
+
+  - changeSet:
+      id: 026-create-fk-transaction-user
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - and:
+            - tableExists:
+                tableName: transaction
+
+            - tableExists:
+                tableName: user
+
+            - not:
+                foreignKeyConstraintExists:
+                  foreignKeyName: transaction_user_fk
+
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: transaction
+            baseColumnNames: user_id
+            constraintName: transaction_user_fk
+            referencedTableName: user
+            referencedColumnNames: id
+
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: transaction
+            constraintName: transaction_user_fk
+
+  - changeSet:
+      id: 027-create-transaction_student_lesson
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - not:
+            tableExists:
+              tableName: transaction_student_lesson
+
+      changes:
+        - createTable:
+            tableName: transaction_student_lesson
+
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  autoIncrement: true
+
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: student_lesson_id
+                  type: bigint
+
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: transaction_id
+                  type: bigint
+
+                  constraints:
+                    nullable: false
+
+      rollback:
+        - dropTable:
+            tableName: transaction_student_lesson
+
+  - changeSet:
+      id: 028-create-fk-transaction_student_lesson-student_lesson
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - and:
+            - tableExists:
+                tableName: transaction_student_lesson
+
+            - tableExists:
+                tableName: student_lesson
+
+            - not:
+                foreignKeyConstraintExists:
+                  foreignKeyName: transaction_student_lesson_student_lesson_fk
+
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: transaction_student_lesson
+            baseColumnNames: student_lesson_id
+            constraintName: transaction_student_lesson_student_lesson_fk
+            referencedTableName: student_lesson
+            referencedColumnNames: id
+
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: transaction_student_lesson
+            constraintName: transaction_student_lesson_student_lesson_fk
+
+  - changeSet:
+      id: 029-create-fk-transaction_student_lesson-transaction
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - and:
+            - tableExists:
+                tableName: transaction_student_lesson
+
+            - tableExists:
+                tableName: transaction
+
+            - not:
+                foreignKeyConstraintExists:
+                  foreignKeyName: transaction_student_lesson_transaction_fk
+
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: transaction_student_lesson
+            baseColumnNames: transaction_id
+            constraintName: transaction_student_lesson_transaction_fk
+            referencedTableName: transaction
+            referencedColumnNames: id
+
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: transaction_student_lesson
+            constraintName: transaction_student_lesson_transaction_fk
+
+  - changeSet:
+      id: 030-create-unique-transaction_student_lesson-transaction_id-student_lesson_id
+      author: ivan minyaev
+
+      preConditions:
+        - onFail: MARK_RAN
+
+        - and:
+            - tableExists:
+                tableName: transaction_student_lesson
+
+            - not:
+                - uniqueConstraintExists:
+                    tableName: transaction_student_lesson
+                    constraintName: transaction_id_student_lesson_id_uq
+
+      changes:
+        - addUniqueConstraint:
+            tableName: transaction_student_lesson
+            columnNames: transaction_id, student_lesson_id
+            constraintName: transaction_id_student_lesson_id_uq
+
+      rollback:
+        - dropUniqueConstraint:
+            tableName: transaction_student_lesson
+            constraintName: transaction_id_student_lesson_id_uq
