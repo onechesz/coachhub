@@ -2,3 +2,7 @@ databaseChangeLog:
   - include:
       file: 001-init.yaml
       relativeToChangelogFile: true
+
+  - include:
+      file: 002-mock-user.yaml
+      relativeToChangelogFile: true
